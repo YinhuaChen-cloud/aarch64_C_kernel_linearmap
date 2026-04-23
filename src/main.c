@@ -24,6 +24,7 @@ static void uart_puts(const char *s)
 
 void kernel_main(void)
 {
+    uart_puts("mmu on (identity map)\n");
     uart_puts("hello world\n");
 
     for (;;) {

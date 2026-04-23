@@ -37,10 +37,11 @@ check-toolchain:
 $(BUILD_DIR):
 	@mkdir -p $@
 
-$(KERNEL_ELF): check-toolchain $(BUILD_DIR) src/start.S src/kernel.c linker.ld
+$(KERNEL_ELF): check-toolchain $(BUILD_DIR) src/start.S src/main.c src/mmu.c src/mmu.h linker.ld
 	$(CC) $(ASFLAGS) -c src/start.S -o $(BUILD_DIR)/start.o
-	$(CC) $(CFLAGS) -c src/kernel.c -o $(BUILD_DIR)/kernel.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(BUILD_DIR)/start.o $(BUILD_DIR)/kernel.o -o $@
+	$(CC) $(CFLAGS) -c src/main.c -o $(BUILD_DIR)/main.o
+	$(CC) $(CFLAGS) -c src/mmu.c -o $(BUILD_DIR)/mmu.o
+	$(CC) $(CFLAGS) $(LDFLAGS) $(BUILD_DIR)/start.o $(BUILD_DIR)/main.o $(BUILD_DIR)/mmu.o -o $@
 
 $(KERNEL_IMG): $(KERNEL_ELF)
 	$(OBJCOPY) -O binary $(KERNEL_ELF) $@

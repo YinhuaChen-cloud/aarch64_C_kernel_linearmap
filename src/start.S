@@ -1,6 +1,7 @@
 .section .text.boot
 .global _start
 .extern kernel_main
+.extern mmu_init
 .extern __bss_start
 .extern __bss_end
 .extern __stack_top
@@ -11,6 +12,7 @@ _start:
 
     bl switch_to_el1
     bl zero_bss
+    bl mmu_init
     bl kernel_main
 
 1:
