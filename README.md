@@ -5,7 +5,9 @@
 ## 文件说明
 
 - `src/start.S`：启动入口，设置栈、必要时从 EL2 切换到 EL1、清零 `.bss`
-- `src/init_c.c`：`init_c()`，并在其中调用 `exception_init()` 和 `mmu_init()`
+- `src/init_c.c`：`init_c()`，并在其中调用 `exception_init()`、`mmu_init()`，最后跳到汇编桥接函数
+- `src/head.S`：从 `init_c()` 跳转到 `main.c` 中的 `main()`
+- `src/main.c`：`main()` 使用 UART 打印 `hello from main`
 - `src/exception.c`：异常打印与异常原因解析
 - `src/exception.h`：异常初始化与异常处理接口声明
 - `src/exception_vectors.S`：异常向量表与 `exception_init()`
