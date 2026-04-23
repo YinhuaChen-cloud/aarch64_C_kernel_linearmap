@@ -59,6 +59,8 @@ make
 make run
 ```
 
+当前默认以 1.5GB 内存启动 QEMU `virt` 机器。
+
 当前示例会故意触发一次越界访问，因此 QEMU 终端会打印类似：
 
 ```text
