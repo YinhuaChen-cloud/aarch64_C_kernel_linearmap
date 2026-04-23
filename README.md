@@ -20,8 +20,10 @@
 
 - 已在 EL1 配置异常向量表 `VBAR_EL1`
 - 当前会捕获同步异常，并打印 `ESR_EL1`、`ELR_EL1`、`FAR_EL1`、`SPSR_EL1`
-- `kernel_main()` 中包含一次对 `0x80000000` 的写访问；该地址未被当前页表映射，因此会触发同步 Data Abort
-- 当 `DFSC` 为 translation fault 时，会打印“内存访问越界异常”
+- `kernel_main()` 中包含两次测试写访问：
+	- `0x80000000`：页表未映射，预期为 translation fault
+	- `0xa0000000`：页表已映射到 Normal memory，但超出当前 QEMU RAM，预期为 synchronous external abort
+- `exception_panic()` 会根据 `ESR_EL1.DFSC` 打印不同异常原因
 
 ## MMU 映射说明
 
@@ -29,6 +31,7 @@
 
 - `0x00000000` - `0x3fffffff`：设备内存，用于覆盖 UART 和其他低地址 MMIO
 - `0x40000000` - `0x7fffffff`：普通可缓存内存，用于覆盖 QEMU `virt` 的 RAM 与内核镜像
+- `0x80000000` - `0xbfffffff`：通过二级页表仅额外映射 `0xa0000000` 所在 2MB 区间，用于测试“页表存在但物理内存不存在”的异常
 
 ## 依赖
 
@@ -61,13 +64,18 @@ make run
 
 当前默认以 1.5GB 内存启动 QEMU `virt` 机器。
 
-当前示例会故意触发一次越界访问，因此 QEMU 终端会打印类似：
+当前示例会依次触发两类异常，因此 QEMU 终端会打印类似：
 
 ```text
 mmu on (identity map)
 hello world
-triggering out-of-bounds memory access...
+test 1: trigger translation fault at 0x80000000
 
 exception: sync current EL with SPx
-内存访问越界异常
+MMU翻译错误（页表未映射）
+
+test 2: trigger DRAM out-of-range access at 0xa0000000
+
+exception: sync current EL with SPx
+访问越界/外部终止（物理内存不存在）
 ```

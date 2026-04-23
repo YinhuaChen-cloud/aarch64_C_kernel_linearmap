@@ -15,6 +15,7 @@
 #define TCR_IPS_36BIT    (1UL << 32)
 
 #define PTE_VALID        (1UL << 0)
+#define PTE_TABLE        (1UL << 1)
 #define PTE_ATTRINDX(x)  ((unsigned long)(x) << 2)
 #define PTE_SH_INNER     (3UL << 8)
 #define PTE_AF           (1UL << 10)
@@ -22,6 +23,7 @@
 #define PTE_PXN          (1UL << 53)
 
 static unsigned long l1_xlat_table[512] __attribute__((aligned(4096)));
+static unsigned long l2_xlat_table_2[512] __attribute__((aligned(4096)));
 
 static inline void dsb_ishst(void)
 {
@@ -61,6 +63,16 @@ void mmu_init(void)
                        PTE_ATTRINDX(1) |
                        PTE_SH_INNER |
                        PTE_AF;
+
+    l1_xlat_table[2] = ((unsigned long)l2_xlat_table_2) |
+                       PTE_VALID |
+                       PTE_TABLE;
+
+    l2_xlat_table_2[256] = 0xa0000000UL |
+                           PTE_VALID |
+                           PTE_ATTRINDX(1) |
+                           PTE_SH_INNER |
+                           PTE_AF;
 
     dsb_ishst();
 
