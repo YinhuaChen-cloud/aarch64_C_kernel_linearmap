@@ -2,7 +2,7 @@
 #include "mmu.h"
 #include "uart.h"
 
-void kernel_main(void)
+void init_c(void)
 {
     volatile unsigned long *const translation_fault_addr = (volatile unsigned long *)0x80000000UL;
     volatile unsigned long *const dram_oob_addr = (volatile unsigned long *)0xa0000000UL;

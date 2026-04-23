@@ -37,14 +37,14 @@ check-toolchain:
 $(BUILD_DIR):
 	@mkdir -p $@
 
-$(KERNEL_ELF): check-toolchain $(BUILD_DIR) src/start.S src/main.c src/mmu.c src/mmu.h src/exception.c src/exception.h src/exception_vectors.S src/uart.c src/uart.h linker.ld
+$(KERNEL_ELF): check-toolchain $(BUILD_DIR) src/start.S src/init_c.c src/mmu.c src/mmu.h src/exception.c src/exception.h src/exception_vectors.S src/uart.c src/uart.h linker.ld
 	$(CC) $(ASFLAGS) -c src/start.S -o $(BUILD_DIR)/start.o
-	$(CC) $(CFLAGS) -c src/main.c -o $(BUILD_DIR)/main.o
+	$(CC) $(CFLAGS) -c src/init_c.c -o $(BUILD_DIR)/init_c.o
 	$(CC) $(CFLAGS) -c src/mmu.c -o $(BUILD_DIR)/mmu.o
 	$(CC) $(CFLAGS) -c src/exception.c -o $(BUILD_DIR)/exception.o
 	$(CC) $(CFLAGS) -c src/uart.c -o $(BUILD_DIR)/uart.o
 	$(CC) $(ASFLAGS) -c src/exception_vectors.S -o $(BUILD_DIR)/exception_vectors.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(BUILD_DIR)/start.o $(BUILD_DIR)/main.o $(BUILD_DIR)/mmu.o $(BUILD_DIR)/exception.o $(BUILD_DIR)/uart.o $(BUILD_DIR)/exception_vectors.o -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) $(BUILD_DIR)/start.o $(BUILD_DIR)/init_c.o $(BUILD_DIR)/mmu.o $(BUILD_DIR)/exception.o $(BUILD_DIR)/uart.o $(BUILD_DIR)/exception_vectors.o -o $@
 
 $(KERNEL_IMG): $(KERNEL_ELF)
 	$(OBJCOPY) -O binary $(KERNEL_ELF) $@

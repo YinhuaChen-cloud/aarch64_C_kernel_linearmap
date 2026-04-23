@@ -1,6 +1,6 @@
 .section .text.boot
 .global _start
-.extern kernel_main
+.extern init_c
 .extern __bss_start
 .extern __bss_end
 .extern __stack_top
@@ -11,7 +11,7 @@ _start:
 
     bl switch_to_el1
     bl zero_bss
-    bl kernel_main
+    bl init_c
 
 1:
     wfe

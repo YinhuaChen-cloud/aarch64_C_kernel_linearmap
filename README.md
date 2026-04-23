@@ -1,11 +1,11 @@
 # AArch64 hello world kernel
 
-这是一个最小化的 AArch64 裸机小内核，使用 C 语言通过 QEMU `virt` 机器的 PL011 UART 输出 `hello world`，并在 `kernel_main()` 开头开启 EL1 MMU 和安装异常向量。
+这是一个最小化的 AArch64 裸机小内核，使用 C 语言通过 QEMU `virt` 机器的 PL011 UART 输出 `hello world`，并在 `init_c()` 开头开启 EL1 MMU 和安装异常向量。
 
 ## 文件说明
 
 - `src/start.S`：启动入口，设置栈、必要时从 EL2 切换到 EL1、清零 `.bss`
-- `src/main.c`：`kernel_main()`，并在其中调用 `exception_init()` 和 `mmu_init()`
+- `src/init_c.c`：`init_c()`，并在其中调用 `exception_init()` 和 `mmu_init()`
 - `src/exception.c`：异常打印与异常原因解析
 - `src/exception.h`：异常初始化与异常处理接口声明
 - `src/exception_vectors.S`：异常向量表与 `exception_init()`
@@ -20,7 +20,7 @@
 
 - 已在 EL1 配置异常向量表 `VBAR_EL1`
 - 当前会捕获同步异常，并打印 `ESR_EL1`、`ELR_EL1`、`FAR_EL1`、`SPSR_EL1`
-- `kernel_main()` 中包含两次测试写访问：
+- `init_c()` 中包含两次测试写访问：
 	- `0x80000000`：页表未映射，预期为 translation fault
 	- `0xa0000000`：页表已映射到 Normal memory，但超出当前 QEMU RAM，预期为 synchronous external abort
 - `exception_panic()` 会根据 `ESR_EL1.DFSC` 打印不同异常原因
