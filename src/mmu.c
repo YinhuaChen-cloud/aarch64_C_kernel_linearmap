@@ -8,10 +8,14 @@
 #define MAIR_ATTR_NORMAL_WB     0xffUL
 
 #define TCR_T0SZ_4GB     32UL
+#define TCR_T1SZ_4GB     (32UL << 16)
 #define TCR_IRGN0_WBWA   (1UL << 8)
+#define TCR_IRGN1_WBWA   (1UL << 24)
 #define TCR_ORGN0_WBWA   (1UL << 10)
+#define TCR_ORGN1_WBWA   (1UL << 26)
 #define TCR_SH0_INNER    (3UL << 12)
-#define TCR_EPD1_DISABLE (1UL << 23)
+#define TCR_SH1_INNER    (3UL << 28)
+#define TCR_TG1_4KB      (2UL << 30)
 #define TCR_IPS_36BIT    (1UL << 32)
 
 #define PTE_VALID        (1UL << 0)
@@ -24,6 +28,7 @@
 
 static unsigned long l1_xlat_table[512] __attribute__((aligned(4096)));
 static unsigned long l2_xlat_table_2[512] __attribute__((aligned(4096)));
+static unsigned long ttbr1_l1_xlat_table[512] __attribute__((aligned(4096)));
 
 static inline void dsb_ishst(void)
 {
@@ -74,12 +79,29 @@ void mmu_init(void)
                            PTE_SH_INNER |
                            PTE_AF;
 
+    ttbr1_l1_xlat_table[0] = 0x00000000UL |
+                        PTE_VALID |
+                        PTE_ATTRINDX(0) |
+                        PTE_AF |
+                        PTE_UXN |
+                        PTE_PXN;
+
+    ttbr1_l1_xlat_table[1] = 0x40000000UL |
+                        PTE_VALID |
+                        PTE_ATTRINDX(1) |
+                        PTE_SH_INNER |
+                        PTE_AF;
+
     dsb_ishst();
 
     mair = (MAIR_ATTR_DEVICE_nGnRnE << 0) |
            (MAIR_ATTR_NORMAL_WB << 8);
     tcr = TCR_IPS_36BIT |
-          TCR_EPD1_DISABLE |
+            TCR_TG1_4KB |
+            TCR_SH1_INNER |
+            TCR_ORGN1_WBWA |
+            TCR_IRGN1_WBWA |
+            TCR_T1SZ_4GB |
           TCR_SH0_INNER |
           TCR_ORGN0_WBWA |
           TCR_IRGN0_WBWA |
@@ -88,6 +110,7 @@ void mmu_init(void)
     __asm__ volatile ("msr mair_el1, %0" :: "r" (mair) : "memory");
     __asm__ volatile ("msr tcr_el1, %0" :: "r" (tcr) : "memory");
     __asm__ volatile ("msr ttbr0_el1, %0" :: "r" (l1_xlat_table) : "memory");
+    __asm__ volatile ("msr ttbr1_el1, %0" :: "r" (ttbr1_l1_xlat_table) : "memory");
 
     isb();
     tlbi_vmalle1();

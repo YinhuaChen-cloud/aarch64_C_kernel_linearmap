@@ -1,15 +1,14 @@
-#include "uart.h"
+#include "early_uart.h"
 
-#define TTBR1_VIRT_OFFSET 0xffffffff00000000UL
-#define UART0_BASE        (TTBR1_VIRT_OFFSET + 0x09000000UL)
+#define UART0_BASE 0x09000000UL
 #define UARTDR     ((volatile unsigned int *)(UART0_BASE + 0x00))
 #define UARTFR     ((volatile unsigned int *)(UART0_BASE + 0x18))
 #define UARTFR_TXFF (1u << 5)
 
-void uart_putc(char ch)
+void early_uart_putc(char ch)
 {
     if (ch == '\n') {
-        uart_putc('\r');
+        early_uart_putc('\r');
     }
 
     while ((*UARTFR & UARTFR_TXFF) != 0u) {
@@ -18,21 +17,21 @@ void uart_putc(char ch)
     *UARTDR = (unsigned int)ch;
 }
 
-void uart_puts(const char *s)
+void early_uart_puts(const char *s)
 {
     while (*s != '\0') {
-        uart_putc(*s++);
+        early_uart_putc(*s++);
     }
 }
 
-void uart_put_hex(unsigned long value)
+void early_uart_put_hex(unsigned long value)
 {
     static const char digits[] = "0123456789abcdef";
     int shift;
 
-    uart_puts("0x");
+    early_uart_puts("0x");
 
     for (shift = (int)(sizeof(unsigned long) * 8U) - 4; shift >= 0; shift -= 4) {
-        uart_putc(digits[(value >> (unsigned int)shift) & 0xfUL]);
+        early_uart_putc(digits[(value >> (unsigned int)shift) & 0xfUL]);
     }
 }

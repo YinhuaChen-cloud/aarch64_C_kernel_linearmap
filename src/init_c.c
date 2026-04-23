@@ -1,8 +1,18 @@
 #include "exception.h"
+#include "early_uart.h"
 #include "mmu.h"
-#include "uart.h"
 
 extern void head_jump_to_main(void);
+
+static void jump_to_high_head(void)
+{
+    __asm__ volatile (
+        "ldr x16, =head_jump_to_main\n"
+        "blr x16\n"
+        :
+        :
+        : "x16", "x30", "memory");
+}
 
 void init_c(void)
 {
@@ -12,17 +22,17 @@ void init_c(void)
     exception_init();
     mmu_init();
 
-    uart_puts("mmu on (identity map)\n");
-    uart_puts("hello world\n");
-    uart_puts("test 1: trigger translation fault at 0x80000000\n");
+    early_uart_puts("mmu on (identity map)\n");
+    early_uart_puts("hello world\n");
+    early_uart_puts("test 1: trigger translation fault at 0x80000000\n");
     *translation_fault_addr = 0xdeadbeefUL;
-    uart_puts("returned after test 1\n");
+    early_uart_puts("returned after test 1\n");
 
-    uart_puts("test 2: trigger DRAM out-of-range access at 0xa0000000\n");
+    early_uart_puts("test 2: trigger DRAM out-of-range access at 0xa0000000\n");
     *dram_oob_addr = 0xcafebabeUL;
-    uart_puts("returned after test 2\n");
+    early_uart_puts("returned after test 2\n");
 
-    head_jump_to_main();
+    jump_to_high_head();
 
     for (;;) {
         __asm__ volatile ("wfe");

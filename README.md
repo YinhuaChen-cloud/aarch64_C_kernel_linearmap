@@ -1,20 +1,22 @@
 # AArch64 hello world kernel
 
-这是一个最小化的 AArch64 裸机小内核，使用 C 语言通过 QEMU `virt` 机器的 PL011 UART 输出 `hello world`，并在 `init_c()` 开头开启 EL1 MMU 和安装异常向量。
+这是一个最小化的 AArch64 裸机小内核，使用 C 语言通过 QEMU `virt` 机器的 PL011 UART 输出信息，并在 `init_c()` 开头开启 EL1 MMU 和安装异常向量。
 
 ## 文件说明
 
 - `src/start.S`：启动入口，设置栈、必要时从 EL2 切换到 EL1、清零 `.bss`
-- `src/init_c.c`：`init_c()`，并在其中调用 `exception_init()`、`mmu_init()`，最后跳到汇编桥接函数
-- `src/head.S`：从 `init_c()` 跳转到 `main.c` 中的 `main()`
-- `src/main.c`：`main()` 使用 UART 打印 `hello from main`
+- `src/init_c.c`：低地址初始化代码，调用 `exception_init()`、`mmu_init()`，并在结束时跳到高地址 `head_jump_to_main`
+- `src/head.S`：高地址汇编桥接代码，先清空 `TTBR0_EL1`，再跳到高地址 `main()`
+- `src/main.c`：高地址 `main()`，使用高地址 UART 打印 `hello from main`
 - `src/exception.c`：异常打印与异常原因解析
 - `src/exception.h`：异常初始化与异常处理接口声明
 - `src/exception_vectors.S`：异常向量表与 `exception_init()`
+- `src/early_uart.c`：低地址早期 UART 输出实现，供 `init_c.c` 和 `exception.c` 使用
+- `src/early_uart.h`：早期 UART 接口声明
 - `src/mmu.c`：一级页表与 `mmu_init()`
 - `src/mmu.h`：`mmu_init()` 接口声明
-- `src/uart.c`：PL011 UART 输出实现
-- `src/uart.h`：UART 输出接口声明
+- `src/uart.c`：高地址 PL011 UART 输出实现，供 `main.c` 等高地址代码使用
+- `src/uart.h`：高地址 UART 输出接口声明
 - `linker.ld`：链接脚本，镜像基地址为 `0x40080000`
 - `Makefile`：编译、生成镜像并启动 QEMU
 
@@ -34,6 +36,14 @@
 - `0x00000000` - `0x3fffffff`：设备内存，用于覆盖 UART 和其他低地址 MMIO
 - `0x40000000` - `0x7fffffff`：普通可缓存内存，用于覆盖 QEMU `virt` 的 RAM 与内核镜像
 - `0x80000000` - `0xbfffffff`：通过二级页表仅额外映射 `0xa0000000` 所在 2MB 区间，用于测试“页表存在但物理内存不存在”的异常
+
+另外还启用了 TTBR1_EL1，选择 32 位 TTBR1 虚拟地址空间（高 4GB）：
+
+- `0xffffffff00000000` - `0xffffffff7fffffff`：映射到物理 `0x00000000` - `0x7fffffff`
+- `linker.ld` 会把 `head.S`、`main.c`、`uart.c` 实际放到高地址虚拟空间，并用 `AT(...)` 让它们紧凑地装入镜像
+- `init_c()` 在 MMU 开启后跳到高地址 `head_jump_to_main`，随后清空 `TTBR0_EL1`，再跳到高地址 `main`
+- 低地址初始化与异常打印使用 `early_uart.c`
+- 高地址 `main()` 使用 TTBR1 下的 UART 虚拟地址 `0xffffffff09000000`
 
 ## 依赖
 

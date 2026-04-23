@@ -1,5 +1,5 @@
 #include "exception.h"
-#include "uart.h"
+#include "early_uart.h"
 
 #define TEST
 
@@ -87,29 +87,29 @@ void exception_panic(unsigned long vector_id,
                      unsigned long far,
                      unsigned long spsr)
 {
-    uart_puts("\nexception: ");
-    uart_puts(exception_vector_name(vector_id));
-    uart_putc('\n');
+    early_uart_puts("\nexception: ");
+    early_uart_puts(exception_vector_name(vector_id));
+    early_uart_putc('\n');
 
     if (is_data_abort(esr)) {
-        uart_puts(data_abort_reason(esr));
-        uart_putc('\n');
+        early_uart_puts(data_abort_reason(esr));
+        early_uart_putc('\n');
     } else {
-        uart_puts("未处理异常\n");
+        early_uart_puts("未处理异常\n");
     }
 
-    uart_puts("ESR_EL1 = ");
-    uart_put_hex(esr);
-    uart_putc('\n');
-    uart_puts("ELR_EL1 = ");
-    uart_put_hex(elr);
-    uart_putc('\n');
-    uart_puts("FAR_EL1 = ");
-    uart_put_hex(far);
-    uart_putc('\n');
-    uart_puts("SPSR_EL1 = ");
-    uart_put_hex(spsr);
-    uart_putc('\n');
+    early_uart_puts("ESR_EL1 = ");
+    early_uart_put_hex(esr);
+    early_uart_putc('\n');
+    early_uart_puts("ELR_EL1 = ");
+    early_uart_put_hex(elr);
+    early_uart_putc('\n');
+    early_uart_puts("FAR_EL1 = ");
+    early_uart_put_hex(far);
+    early_uart_putc('\n');
+    early_uart_puts("SPSR_EL1 = ");
+    early_uart_put_hex(spsr);
+    early_uart_putc('\n');
 
 #ifdef TEST
     return;

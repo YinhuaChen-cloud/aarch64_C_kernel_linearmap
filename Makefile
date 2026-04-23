@@ -15,7 +15,7 @@ KERNEL_IMG  := $(BUILD_DIR)/kernel8.img
 CFLAGS  := -Wall -Wextra -O2 -ffreestanding -fno-stack-protector -fno-pic -fno-pie \
            -nostdlib -nostartfiles -mgeneral-regs-only -mcpu=cortex-a53
 ASFLAGS := $(CFLAGS)
-LDFLAGS := -T linker.ld -nostdlib -Wl,--build-id=none -Wl,-n
+LDFLAGS := -T linker.ld -nostdlib -static -no-pie -Wl,--build-id=none -Wl,-n -Wl,--no-dynamic-linker
 
 QEMU_FLAGS := -machine virt -cpu cortex-a53 -m 1G -nographic -serial mon:stdio -kernel $(KERNEL_IMG)
 
@@ -37,16 +37,17 @@ check-toolchain:
 $(BUILD_DIR):
 	@mkdir -p $@
 
-$(KERNEL_ELF): check-toolchain $(BUILD_DIR) src/start.S src/init_c.c src/main.c src/head.S src/mmu.c src/mmu.h src/exception.c src/exception.h src/exception_vectors.S src/uart.c src/uart.h linker.ld
+$(KERNEL_ELF): check-toolchain $(BUILD_DIR) src/start.S src/init_c.c src/main.c src/head.S src/mmu.c src/mmu.h src/exception.c src/exception.h src/exception_vectors.S src/early_uart.c src/early_uart.h src/uart.c src/uart.h linker.ld
 	$(CC) $(ASFLAGS) -c src/start.S -o $(BUILD_DIR)/start.o
 	$(CC) $(CFLAGS) -c src/init_c.c -o $(BUILD_DIR)/init_c.o
 	$(CC) $(CFLAGS) -c src/main.c -o $(BUILD_DIR)/main.o
 	$(CC) $(ASFLAGS) -c src/head.S -o $(BUILD_DIR)/head.o
 	$(CC) $(CFLAGS) -c src/mmu.c -o $(BUILD_DIR)/mmu.o
 	$(CC) $(CFLAGS) -c src/exception.c -o $(BUILD_DIR)/exception.o
+	$(CC) $(CFLAGS) -c src/early_uart.c -o $(BUILD_DIR)/early_uart.o
 	$(CC) $(CFLAGS) -c src/uart.c -o $(BUILD_DIR)/uart.o
 	$(CC) $(ASFLAGS) -c src/exception_vectors.S -o $(BUILD_DIR)/exception_vectors.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(BUILD_DIR)/start.o $(BUILD_DIR)/init_c.o $(BUILD_DIR)/main.o $(BUILD_DIR)/head.o $(BUILD_DIR)/mmu.o $(BUILD_DIR)/exception.o $(BUILD_DIR)/uart.o $(BUILD_DIR)/exception_vectors.o -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) $(BUILD_DIR)/start.o $(BUILD_DIR)/init_c.o $(BUILD_DIR)/main.o $(BUILD_DIR)/head.o $(BUILD_DIR)/mmu.o $(BUILD_DIR)/exception.o $(BUILD_DIR)/early_uart.o $(BUILD_DIR)/uart.o $(BUILD_DIR)/exception_vectors.o -o $@
 
 $(KERNEL_IMG): $(KERNEL_ELF)
 	$(OBJCOPY) -O binary $(KERNEL_ELF) $@
