@@ -5,12 +5,14 @@
 ## 文件说明
 
 - `src/start.S`：启动入口，设置栈、必要时从 EL2 切换到 EL1、清零 `.bss`
-- `src/main.c`：UART 驱动、`kernel_main()`，并在其中调用 `exception_init()` 和 `mmu_init()`
+- `src/main.c`：`kernel_main()`，并在其中调用 `exception_init()` 和 `mmu_init()`
 - `src/exception.c`：异常打印与异常原因解析
 - `src/exception.h`：异常初始化与异常处理接口声明
 - `src/exception_vectors.S`：异常向量表与 `exception_init()`
 - `src/mmu.c`：一级页表与 `mmu_init()`
 - `src/mmu.h`：`mmu_init()` 接口声明
+- `src/uart.c`：PL011 UART 输出实现
+- `src/uart.h`：UART 输出接口声明
 - `linker.ld`：链接脚本，镜像基地址为 `0x40080000`
 - `Makefile`：编译、生成镜像并启动 QEMU
 
