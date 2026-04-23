@@ -10,6 +10,11 @@
 #define EC_DATA_ABORT_LOWER_EL   0x24UL
 #define EC_DATA_ABORT_CURRENT_EL 0x25UL
 
+#define DFSC_TRANSLATION_L0      0x04UL
+#define DFSC_TRANSLATION_L3      0x07UL
+#define DFSC_SYNC_EXT_ABORT      0x10UL
+#define DFSC_SYNC_EXT_ABORT_L3   0x17UL
+
 static const char *exception_vector_name(unsigned long vector_id)
 {
     switch (vector_id) {
@@ -50,16 +55,30 @@ static const char *exception_vector_name(unsigned long vector_id)
     }
 }
 
-static int is_out_of_bounds_abort(unsigned long esr)
+static int is_data_abort(unsigned long esr)
 {
     unsigned long ec = (esr >> ESR_EC_SHIFT) & ESR_EC_MASK;
-    unsigned long dfsc = esr & ESR_DFSC_MASK;
 
     if (ec != EC_DATA_ABORT_LOWER_EL && ec != EC_DATA_ABORT_CURRENT_EL) {
         return 0;
     }
 
-    return (dfsc >= 0x4UL && dfsc <= 0x7UL);
+    return 1;
+}
+
+static const char *data_abort_reason(unsigned long esr)
+{
+    unsigned long dfsc = esr & ESR_DFSC_MASK;
+
+    if (dfsc >= DFSC_TRANSLATION_L0 && dfsc <= DFSC_TRANSLATION_L3) {
+        return "MMU翻译错误（页表未映射）";
+    }
+
+    if (dfsc >= DFSC_SYNC_EXT_ABORT && dfsc <= DFSC_SYNC_EXT_ABORT_L3) {
+        return "访问越界/外部终止（物理内存不存在）";
+    }
+
+    return "未分类的数据访问异常";
 }
 
 void exception_panic(unsigned long vector_id,
@@ -72,8 +91,9 @@ void exception_panic(unsigned long vector_id,
     uart_puts(exception_vector_name(vector_id));
     uart_putc('\n');
 
-    if (is_out_of_bounds_abort(esr)) {
-        uart_puts("内存访问越界异常\n");
+    if (is_data_abort(esr)) {
+        uart_puts(data_abort_reason(esr));
+        uart_putc('\n');
     } else {
         uart_puts("未处理异常\n");
     }
