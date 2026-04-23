@@ -1,6 +1,8 @@
 #include "exception.h"
 #include "uart.h"
 
+#define TEST
+
 #define ESR_EC_SHIFT 26UL
 #define ESR_EC_MASK  0x3fUL
 #define ESR_DFSC_MASK 0x3fUL
@@ -89,7 +91,11 @@ void exception_panic(unsigned long vector_id,
     uart_put_hex(spsr);
     uart_putc('\n');
 
+#ifdef TEST
+    return;
+#else
     for (;;) {
         __asm__ volatile ("wfe");
     }
+#endif
 }
