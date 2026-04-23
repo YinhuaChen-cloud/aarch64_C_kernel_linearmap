@@ -62,7 +62,7 @@ make
 make run
 ```
 
-当前默认以 1.5GB 内存启动 QEMU `virt` 机器。
+当前默认以 1GB 内存启动 QEMU `virt` 机器。
 
 当前示例会依次触发两类异常，因此 QEMU 终端会打印类似：
 

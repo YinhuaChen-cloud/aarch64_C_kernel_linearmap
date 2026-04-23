@@ -17,7 +17,7 @@ CFLAGS  := -Wall -Wextra -O2 -ffreestanding -fno-stack-protector -fno-pic -fno-p
 ASFLAGS := $(CFLAGS)
 LDFLAGS := -T linker.ld -nostdlib -Wl,--build-id=none -Wl,-n
 
-QEMU_FLAGS := -machine virt -cpu cortex-a53 -m 1536M -nographic -serial mon:stdio -kernel $(KERNEL_IMG)
+QEMU_FLAGS := -machine virt -cpu cortex-a53 -m 1G -nographic -serial mon:stdio -kernel $(KERNEL_IMG)
 
 .PHONY: all run clean check-toolchain
 
