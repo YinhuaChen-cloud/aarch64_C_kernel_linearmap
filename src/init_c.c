@@ -4,16 +4,6 @@
 
 extern void head_jump_to_main(void);
 
-static void jump_to_high_head(void)
-{
-    __asm__ volatile (
-        "ldr x16, =head_jump_to_main\n"
-        "blr x16\n"
-        :
-        :
-        : "x16", "x30", "memory");
-}
-
 void init_c(void)
 {
     volatile unsigned long *const translation_fault_addr = (volatile unsigned long *)0x80000000UL;
@@ -32,7 +22,7 @@ void init_c(void)
     *dram_oob_addr = 0xcafebabeUL;
     early_uart_puts("returned after test 2\n");
 
-    jump_to_high_head();
+    head_jump_to_main();
 
     for (;;) {
         __asm__ volatile ("wfe");
